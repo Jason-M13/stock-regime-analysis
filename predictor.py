@@ -1,44 +1,60 @@
 import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import silhouette_score
 
-class Predictor:
-    def __init__(self, feature_cols):
+class RegimeClusterer:
+    def __init__(self, feature_cols, n_clusters=4, random_state=42):
         self.feature_cols = feature_cols
-        self.model = LogisticRegression(max_iter=1000)
+        self.n_clusters = n_clusters
+        self.random_state = random_state
 
-    def train(self,df):
-        x = df[self.feature_cols].copy()
-        y = df["target"].copy()
+        self.scaler = StandardScaler()
+        self.kmeans = KMeans(n_clusters=n_clusters, random_state=random_state, n_init=10)
+        self.pca = PCA(n_components=2)
 
-        x = x.replace([np.inf, -np.inf],np.nan).dropna()
-        y = y.loc[x.index]
+    def fit(self, df):
+        data = df.copy()
 
-        x_train, x_test, y_train, y_test = train_test_split(x,y, shuffle = False, test_size = 0.2)
+        x = data[self.feature_cols].copy()
+        x = x.replace([np.inf, -np.inf], np.nan).dropna()
 
-        self.model.fit(x_train, y_train)
-        acc = self.model.score(x_test, y_test)
-        self.x_test, self.y_test = x_test, y_test
+        # keep aligned dataframe
+        data = data.loc[x.index].copy()
 
-        print(f"Test Accuracy: {acc}")
+        x_scaled = self.scaler.fit_transform(x)
+        clusters = self.kmeans.fit_predict(x_scaled)
+        pca_components = self.pca.fit_transform(x_scaled)
 
-        return x,y
-    
-    def predict(self, df):
-        latest = df[self.feature_cols].iloc[[-1]]
-        probablity = self.model.predict_proba(latest)[0]
-        
-        prediction = int(probablity[1] >= 0.5)
-        if prediction == 1:
-            direction = "Up"
-        else:
-            direction = "Down"
-        
-        confidence = max(probablity)
+        data["cluster"] = clusters
+        data["pca_1"] = pca_components[:, 0]
+        data["pca_2"] = pca_components[:, 1]
 
-        print("\nLatest Prediction:")
-        print(f"Direction: {direction}")
-        print(f"Confidence Rate: {confidence:.2%}")
+        self.x = x
+        self.x_scaled = x_scaled
+        self.clustered_df = data
 
-        return direction, confidence 
-    
+        self.inertia = self.kmeans.inertia_
+        self.silhouette = silhouette_score(x_scaled, clusters)
+
+        print(f"Clusters fitted: {self.n_clusters}")
+        print(f"Silhouette Score: {self.silhouette:.4f}")
+
+        return data
+
+    def predict_latest_cluster(self, df):
+        latest = df[self.feature_cols].iloc[[-1]].copy()
+        latest = latest.replace([np.inf, -np.inf], np.nan).dropna()
+
+        if latest.empty:
+            raise ValueError("Latest row contains invalid or missing feature values.")
+
+        latest_scaled = self.scaler.transform(latest)
+        cluster = self.kmeans.predict(latest_scaled)[0]
+        pca_point = self.pca.transform(latest_scaled)[0]
+
+        print("\nLatest Market Regime:")
+        print(f"Cluster: {cluster}")
+
+        return cluster, pca_point
