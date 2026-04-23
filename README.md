@@ -7,7 +7,8 @@ A Python project that uses **stock indicators and machine learning** to predict 
 
 ## Features
 - Fetches historical stock data (time series, Bollinger Bands, ADX) via **Twelve Data API**.  
-- Supports flexible intervals (`1day`, `1week`, `1month`) and history ranges (default: **10 years**).  
+- Supports flexible intervals (`1day`, `1week`, `1month`) and history ranges (default: **10 years**).
+- **(Note: It is possible to test interval at 1 minute with the input of **1 min**, however be mindful of the API credit usage)**
 - Feature engineering includes:
   - Returns (1, 3, 6, 12 periods)  
   - Rolling volatility  
@@ -35,20 +36,30 @@ A Python project that uses **stock indicators and machine learning** to predict 
 ---
 
 ## How to Run the Project
-  ### 1. Open the Project in VSCode
+ ### 1. Open the TwelveData website
+  - create an account or log in with an existing account
+  - Navigate to **API Keys** on the left hand side menu 
+  - Click the reveal key and copy it
+
+  ### 2. Open the Project in VSCode
   - Click on **code** and click on download zip
   - Unzip the folder and launch **VSCode**.
   - Load the project into the IDE.
 
-  ### 2. Run main.py
+ ### 3. Create a new file called **.env**
+  - Ensure the **.env** file is in the same directory as the project 
+  - Type out **api_key=** and paste the api key from **step 1** 
+  - Make sure there are no spaces
+
+  ### 4. Run main.py
   - Open main.py and allow files to load
   - Simply run main.py
 
-  ### 3. Inputs
-  **(Note: Don't add any spaces when entering input into the console, otherwise the data cannot be retrieved)**
+  ### 5. Inputs
+  **(Note: Don't add any spaces when entering input into the console, otherwise the data cannot be retrieved)** 
   - Enter the interval options (`1day`, `1week`, `1month`)
   - Enter the desired ticker
-
+ 
 ---
 
 ## Requirements & Tools Used 
